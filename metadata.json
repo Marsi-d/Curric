@@ -1,0 +1,6 @@
+{
+  "name": "Curriculum Mapping & Study Planner",
+  "description": "Canonical data architecture, schema validation, hierarchical curriculum mapping, and independent ranking layers for academic study planning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

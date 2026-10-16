@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curriculum-planner.app/schemas/v1/curriculum.schema.json",
+  "title": "CanonicalCurriculumDocument",
+  "description": "Canonical schema for hierarchical curriculum mapping and decoupled ranking profiles.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "title", "createdAt", "updatedAt", "subjects", "rankingProfiles", "rankingAssignments"],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Top-level schema version for migration compatibility."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Permanent unique identifier of the curriculum document."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable name of the curriculum project."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional summary or overview."
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "ISO timestamp of creation."
+    },
+    "updatedAt": {
+      "type": "string",
+      "description": "ISO timestamp of last update."
+    },
+    "subjects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Subject" },
+      "description": "Hierarchical subjects forming the canonical curriculum tree."
+    },
+    "rankingProfiles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RankingProfile" },
+      "description": "Independent ranking definitions (tier-based or ordered)."
+    },
+    "rankingAssignments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RankingAssignment" },
+      "description": "Assignments referencing curriculum item IDs without altering their hierarchy."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary top-level document metadata to preserve unmodeled fields."
+    }
+  },
+  "$defs": {
+    "SourceInfo": {
+      "type": "object",
+      "properties": {
+        "fileOrBook": { "type": "string" },
+        "page": { "type": ["number", "string"] },
+        "chapterOrUnit": { "type": "string" },
+        "extractionNotes": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "StudyMetadata": {
+      "type": "object",
+      "properties": {
+        "mastery": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "importance": { "type": "string" },
+        "estimatedStudyMinutes": { "type": "number", "minimum": 0 },
+        "status": { "type": "string" },
+        "notes": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "lastReviewedAt": { "type": "string" },
+        "nextReviewDate": { "type": "string" },
+        "reviewHistoryCount": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "Subtopic": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "order": { "type": "number" },
+        "description": { "type": "string" },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Array of prerequisite topic/subtopic IDs."
+        },
+        "source": { "$ref": "#/$defs/SourceInfo" },
+        "studyMetadata": { "$ref": "#/$defs/StudyMetadata" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "Topic": {
+      "type": "object",
+      "required": ["id", "name", "subtopics"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "order": { "type": "number" },
+        "description": { "type": "string" },
+        "subtopics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Subtopic" }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "source": { "$ref": "#/$defs/SourceInfo" },
+        "studyMetadata": { "$ref": "#/$defs/StudyMetadata" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "Unit": {
+      "type": "object",
+      "required": ["id", "name", "topics"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "order": { "type": "number" },
+        "description": { "type": "string" },
+        "topics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Topic" }
+        },
+        "source": { "$ref": "#/$defs/SourceInfo" },
+        "studyMetadata": { "$ref": "#/$defs/StudyMetadata" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "CurriculumGroup": {
+      "type": "object",
+      "required": ["id", "name", "type", "units"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": ["grade", "category", "module", "domain", "general"]
+        },
+        "gradeLevel": { "type": "integer" },
+        "order": { "type": "number" },
+        "code": { "type": "string" },
+        "description": { "type": "string" },
+        "units": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Unit" }
+        },
+        "directTopics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Topic" },
+          "description": "Optional direct topics if the group doesn't use units (e.g. Aptitude categories)."
+        },
+        "source": { "$ref": "#/$defs/SourceInfo" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "Subject": {
+      "type": "object",
+      "required": ["id", "name", "groups"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "shortName": { "type": "string" },
+        "code": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["academic", "aptitude", "vocational", "custom"]
+        },
+        "description": { "type": "string" },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CurriculumGroup" }
+        },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "RankingTier": {
+      "type": "object",
+      "required": ["id", "label", "order"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "color": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "RankingProfile": {
+      "type": "object",
+      "required": ["id", "name", "type", "scope"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": ["tier", "ordered"]
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["all_subjects", "subject_specific", "custom"]
+        },
+        "targetSubjectId": { "type": "string" },
+        "description": { "type": "string" },
+        "tiers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/RankingTier" }
+        },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "RankingAssignment": {
+      "type": "object",
+      "required": ["id", "rankingProfileId", "itemId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "rankingProfileId": { "type": "string", "minLength": 1 },
+        "itemId": { "type": "string", "minLength": 1 },
+        "rank": { "type": "string", "description": "Tier ID when profile is tier-based" },
+        "order": { "type": "integer", "minimum": 1, "description": "1-based order when profile is ordered" },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    }
+  }
+}
